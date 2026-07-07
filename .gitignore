@@ -1,0 +1,7 @@
+fyp_env/
+__pycache__/
+student_images/
+*.db
+*.sqlite
+.env
+.vscode/

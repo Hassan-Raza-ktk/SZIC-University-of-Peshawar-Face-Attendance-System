@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SZIC Attendance - Login</title>
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .logo-text {
+            color: #1a1a2e;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+        .btn-primary {
+            background: #1a1a2e;
+            border: none;
+            width: 100%;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h2 class="logo-text">🎓 SZIC</h2>
+            <p class="text-muted">Attendance Management System</p>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Username</label>
+                <input type="text" name="username" class="form-control" 
+                       placeholder="Enter username" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Password</label>
+                <input type="password" name="password" class="form-control" 
+                       placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        
+        <p class="text-center text-muted mt-3" style="font-size:0.8rem;">
+            University of Peshawar — SZIC
+        </p>
+    </div>
+</body>
+</html>

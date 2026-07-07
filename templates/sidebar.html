@@ -1,0 +1,76 @@
+<div class="sidebar">
+
+    <h5 class="text-white fw-bold mb-4">
+        🎓 SZIC Attendance
+    </h5>
+
+    {% if session.get('role') == 'admin' %}
+
+        <a href="/dashboard"
+           class="{% if request.path == '/dashboard' %}active{% endif %}">
+            📊 Dashboard
+        </a>
+
+        <a href="/subjects"
+           class="{% if request.path == '/subjects' %}active{% endif %}">
+            📚 Subjects
+        </a>
+
+        <a href="/academic-setup"
+           class="{% if request.path == '/academic-setup' %}active{% endif %}">
+            🏛️ Academic Setup
+        </a>
+
+        <a href="/timetable"
+           class="{% if request.path == '/timetable' %}active{% endif %}">
+            🗓️ Timetable
+        </a>
+
+        <a href="/class-sessions"
+           class="{% if request.path == '/class-sessions' %}active{% endif %}">
+            🧾 Class Sessions
+        </a>
+
+        <a href="/register"
+           class="{% if request.path == '/register' %}active{% endif %}">
+            ➕ Register Student
+        </a>
+
+
+        <a href="/reports"
+           class="{% if request.path == '/reports' %}active{% endif %}">
+            📋 Reports
+        </a>
+
+        <a href="/users"
+           class="{% if request.path == '/users' %}active{% endif %}">
+           👥 User Management
+        </a>
+
+    {% elif session.get('role') == 'teacher' %}
+
+        <a href="/teacher-dashboard"
+           class="{% if request.path == '/teacher-dashboard' %}active{% endif %}">
+            👨‍🏫 Teacher Dashboard
+        </a>
+
+        <a href="/manual-attendance"
+           class="{% if request.path == '/manual-attendance' %}active{% endif %}">
+           📝 Mark Attendance
+        </a>
+        
+        
+        <a href="/teacher/attendance-records"
+           class="{% if request.path == '/teacher/attendance-records' %}active{% endif %}">
+            📋 My Attendance Records
+        </a>
+        
+
+    {% endif %}
+
+    <a href="/logout"
+       style="color:#ff6b6b; margin-top:20px;">
+        🚪 Logout
+    </a>
+
+</div>

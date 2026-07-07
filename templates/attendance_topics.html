@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class Topics | SZIC Attendance</title>
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+
+    <style>
+        body { background:#f3f6fb; font-family:Segoe UI, sans-serif; }
+        .main-box{
+            max-width:800px;
+            margin:60px auto;
+        }
+        .premium-card{
+            border:0;
+            border-radius:20px;
+            box-shadow:0 12px 35px rgba(16,24,47,.10);
+        }
+        .hero-head{
+            background:linear-gradient(135deg,#0d47a1,#4f7cff);
+            color:white;
+            padding:25px;
+            border-radius:20px 20px 0 0;
+        }
+        .topic-row{
+            display:flex;
+            gap:10px;
+            margin-bottom:10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="main-box">
+
+    <div class="card premium-card">
+
+        <div class="hero-head">
+            <h3 class="fw-bold mb-2">📝 Add Topics Covered</h3>
+            <p class="mb-0">
+                Please enter the topics taught in this class before starting attendance.
+            </p>
+        </div>
+
+        <div class="card-body p-4">
+
+            <div class="alert alert-info">
+                <strong>Class:</strong> {{ current_class.subject_name if current_class.subject_name else 'Selected Class' }}
+                <br>
+                <strong>Schedule ID:</strong> {{ current_class.id }}
+            </div>
+
+            <form method="POST">
+
+                <input type="hidden" name="class_session_id" value="{{ class_session_id }}">
+
+                <label class="form-label fw-semibold">Topics Covered</label>
+
+                <div id="topicsBox">
+                    <div class="topic-row">
+                        <input type="text"
+                               name="topics"
+                               class="form-control"
+                               placeholder="Example: Introduction to SDLC"
+                               required>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn btn-outline-primary btn-sm mt-2"
+                        onclick="addTopicField()">
+                    ➕ Add Another Topic
+                </button>
+
+                <div class="d-flex gap-2 mt-4">
+                    <a href="/teacher-dashboard"
+                       class="btn btn-outline-secondary w-50">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success w-50">
+                        📷 Save Topics & Start Attendance
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function addTopicField() {
+    const box = document.getElementById('topicsBox');
+
+    const row = document.createElement('div');
+    row.className = 'topic-row';
+
+    row.innerHTML = `
+        <input type="text"
+               name="topics"
+               class="form-control"
+               placeholder="Enter another topic">
+        <button type="button"
+                class="btn btn-outline-danger"
+                onclick="this.parentElement.remove()">
+            ✕
+        </button>
+    `;
+
+    box.appendChild(row);
+}
+</script>
+
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+
+</body>
+</html>

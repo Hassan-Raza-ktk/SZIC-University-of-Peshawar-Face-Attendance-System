@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SZIC Dashboard</title>
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+
+    <style>
+        body { background:#f3f6fb; font-family:Segoe UI, sans-serif; }
+        .sidebar{background:#10182f;min-height:100vh;padding:22px;width:250px;position:fixed;top:0;left:0}
+        .sidebar a{color:#c8d0df;text-decoration:none;display:block;padding:12px 15px;border-radius:10px;margin-bottom:7px}
+        .sidebar a:hover,.sidebar .active{background:#0d47a1;color:white}
+        .main-content{margin-left:250px;padding:32px}
+        .page-title{font-weight:800;color:#10182f}
+        .semester-card{border:0;border-radius:20px;box-shadow:0 12px 35px rgba(16,24,47,.08);overflow:hidden;background:white;height:100%}
+        .semester-header{background:linear-gradient(135deg,#0f3460,#4f7cff);color:white;padding:20px}
+        .semester-title{font-weight:800;font-size:1.35rem;margin-bottom:8px}
+        .mini-stat span{background:rgba(255,255,255,.18);padding:6px 10px;border-radius:999px;font-size:.78rem;font-weight:700}
+        .tab-btn{border:0;border-radius:999px;padding:6px 11px;font-size:.78rem;font-weight:700;margin:3px;background:#eef2ff;color:#0f3460}
+        .tab-btn.active{background:#0d47a1;color:white}
+        .section-view{display:none}
+        .section-view.active{display:block}
+        .section-pill{display:inline-block;background:#e9f8f1;color:#168653;padding:6px 12px;border-radius:999px;font-size:.8rem;font-weight:700;margin:3px 0}
+        .active-box{background:#f1fff8;border:1px solid #b8f3d1;border-radius:14px;padding:14px;margin-bottom:14px}
+        .active-title{font-size:.8rem;color:#198754;font-weight:800;text-transform:uppercase}
+        .schedule-item{border:1px solid #e7eaf0;border-radius:14px;padding:12px;margin-bottom:10px;background:#fff}
+        .time-pill{background:#eef2ff;color:#0f3460;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:800;white-space:nowrap}
+        .present-pill{background:#e8f7ee;color:#198754;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:800;display:inline-block;margin-top:5px}
+        .empty-box{border:1px dashed #d5dbe8;border-radius:14px;padding:20px;text-align:center;color:#6c757d}
+        .date-badge{background:#eef2ff;color:#0f3460;border-radius:999px;padding:8px 14px;font-size:.85rem;font-weight:700}
+    </style>
+</head>
+
+<body>
+
+{% include 'sidebar.html' %}
+
+<div class="main-content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title mb-1">Dashboard</h2>
+            <p class="text-muted mb-0">Semester-wise active classes and today’s attendance overview.</p>
+        </div>
+        <span class="date-badge">📅 {{ today }}</span>
+    </div>
+
+    <div class="row g-4">
+        {% for sem in semester_data %}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="semester-card">
+
+                <div class="semester-header">
+                    <div class="semester-title">
+                        {{ sem.semester_no }}{% if sem.semester_no == 2 %}nd{% else %}th{% endif %} Semester
+                    </div>
+
+                    {% set sem_total = sem.sections_data | sum(attribute='total_students') %}
+
+                    <div class="mini-stat">
+                        <span>Total Students: {{ sem_total }}</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-3">
+
+                    {% if sem.sections_data|length > 1 %}
+                    <div class="mb-3">
+                        <button class="tab-btn active"
+                                onclick="showSection('{{ sem.semester_no }}', 'all', this)">
+                            All
+                        </button>
+
+                        {% for sec in sem.sections_data %}
+                        <button class="tab-btn"
+                                onclick="showSection('{{ sem.semester_no }}', '{{ sec.section_id }}', this)">
+                            Section {{ sec.section_name }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- ALL VIEW -->
+                    <div id="sem-{{ sem.semester_no }}-all" class="section-view active">
+
+                        {% for sec in sem.sections_data %}
+                        <div class="mb-3">
+                            {% if sec.section_name == 'General' %}
+                                <span class="section-pill">General</span>
+                            {% else %}
+                                <span class="section-pill">Section {{ sec.section_name }}</span>
+                            {% endif %}
+
+                            <div class="small text-muted mb-2">
+                                Total: {{ sec.total_students }} | Present Today: {{ sec.present_today }}
+                            </div>
+
+                            <div class="fw-bold mb-2">Active Class</div>
+
+                            {% if sec.current_classes %}
+                                {% for cls in sec.current_classes %}
+                                <div class="active-box">
+                                    <div class="active-title">Live Now</div>
+                                    <div class="fw-bold mt-1">{{ cls.subject_name }}</div>
+                                    <small class="text-muted">👨‍🏫 {{ cls.teacher }}</small>
+                                    <div class="mt-2">
+                                        <span class="time-pill">{{ cls.start_time }} - {{ cls.end_time }}</span>
+                                    </div>
+
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-box mb-3">No active class</div>
+                            {% endif %}
+
+                            <div class="fw-bold mb-2">Today's Schedule</div>
+
+                            {% if sec.schedules %}
+                                {% for cls in sec.schedules %}
+                                <div class="schedule-item">
+                                    <div class="fw-semibold">{{ cls.subject_name }}</div>
+                                    <small class="text-muted">👨‍🏫 {{ cls.teacher }}</small>
+                                    <br>
+                                    <span class="present-pill">Present: {{ cls.present_count or 0 }}</span>
+                                    <div class="mt-2">
+                                        <span class="time-pill">{{ cls.start_time }} - {{ cls.end_time }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-box">No schedule today</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- SECTION VIEWS -->
+                    {% for sec in sem.sections_data %}
+                    <div id="sem-{{ sem.semester_no }}-{{ sec.section_id }}" class="section-view">
+
+                        {% if sec.section_name == 'General' %}
+                            <span class="section-pill">General</span>
+                        {% else %}
+                            <span class="section-pill">Section {{ sec.section_name }}</span>
+                        {% endif %}
+
+                        <div class="small text-muted mb-3">
+                            Total Students: {{ sec.total_students }} | Present Today: {{ sec.present_today }}
+                        </div>
+
+                        <div class="fw-bold mb-2">Active Class</div>
+
+                        {% if sec.current_classes %}
+                            {% for cls in sec.current_classes %}
+                            <div class="active-box">
+                                <div class="active-title">Live Now</div>
+                                <div class="fw-bold mt-1">{{ cls.subject_name }}</div>
+                                <small class="text-muted">👨‍🏫 {{ cls.teacher }}</small>
+                                <div class="mt-2">
+                                    <span class="time-pill">{{ cls.start_time }} - {{ cls.end_time }}</span>
+                                </div>
+
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-box mb-3">No active class</div>
+                        {% endif %}
+
+                        <div class="fw-bold mb-2">Today's Schedule</div>
+
+                        {% if sec.schedules %}
+                            {% for cls in sec.schedules %}
+                            <div class="schedule-item">
+                                <div class="fw-semibold">{{ cls.subject_name }}</div>
+                                <small class="text-muted">👨‍🏫 {{ cls.teacher }}</small>
+                                <br>
+                                <span class="present-pill">Present: {{ cls.present_count or 0 }}</span>
+                                <div class="mt-2">
+                                    <span class="time-pill">{{ cls.start_time }} - {{ cls.end_time }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-box">No schedule today</div>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+function showSection(semesterNo, sectionId, button) {
+    const card = button.closest('.semester-card');
+
+    card.querySelectorAll('.section-view').forEach(view => {
+        view.classList.remove('active');
+    });
+
+    card.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    document.getElementById(`sem-${semesterNo}-${sectionId}`).classList.add('active');
+    button.classList.add('active');
+}
+</script>
+
+</body>
+</html>

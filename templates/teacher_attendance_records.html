@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Attendance Records | SZIC Attendance</title>
+
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+
+    <style>
+        body{
+            background:#f4f7fc;
+            font-family:Segoe UI,sans-serif;
+        }
+
+        .main-content{
+            margin-left:250px;
+            padding:30px;
+        }
+
+        .page-title{
+            font-weight:800;
+            color:#10182f;
+        }
+
+        .premium-card{
+            border:none;
+            border-radius:18px;
+            box-shadow:0 12px 30px rgba(0,0,0,.08);
+        }
+
+        .kpi-card{
+            border:none;
+            border-radius:18px;
+            color:white;
+            padding:22px;
+        }
+
+        .kpi-value{
+            font-size:2rem;
+            font-weight:800;
+        }
+
+        .topic-badge{
+            background:#eef2ff;
+            color:#0d47a1;
+            padding:5px 10px;
+            border-radius:20px;
+            font-size:.8rem;
+            margin:2px;
+            display:inline-block;
+        }
+
+        .attendance-good{
+            color:#198754;
+            font-weight:700;
+        }
+
+        .attendance-low{
+            color:#dc3545;
+            font-weight:700;
+        }
+
+        .table th{
+            background:#10182f;
+            color:white;
+            vertical-align:middle;
+        }
+
+        .table td{
+            vertical-align:middle;
+        }
+
+        .sidebar{
+            background:#10182f;
+            min-height:100vh;
+            padding:22px;
+            width:250px;
+            position:fixed;
+            top:0;
+            left:0;
+        }
+
+        .sidebar a{
+            color:#c8d0df;
+            text-decoration:none;
+            display:block;
+            padding:12px 15px;
+            border-radius:10px;
+            margin-bottom:7px;
+        }
+
+        .sidebar a:hover,
+        .sidebar .active{
+            background:#0d47a1;
+            color:white;
+        }
+    </style>
+</head>
+
+<body>
+
+{% include 'sidebar.html' %}
+
+<div class="main-content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">📋 My Attendance Records</h2>
+            <p class="text-muted mb-0">
+                View all classes, topics and attendance statistics.
+            </p>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+            <div class="kpi-card bg-primary">
+                <div>Total Classes</div>
+                <div class="kpi-value">{{ records|length }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="kpi-card bg-success">
+                <div>Completed Sessions</div>
+                <div class="kpi-value">
+                    {{ records | selectattr("status","equalto","Conducted") | list | length }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="kpi-card bg-dark">
+                <div>Subjects Taught</div>
+                <div class="kpi-value">
+                    {{ records | map(attribute='subject_name') | unique | list | length }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Records Table -->
+
+    <div class="card premium-card">
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Class</th>
+                            <th>Topics</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Attendance %</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for row in records %}
+
+                    <tr>
+
+                        <td>
+                            {{ row.session_date }}
+                            <br>
+                            <small class="text-muted">
+                                {{ row.start_time }} - {{ row.end_time }}
+                            </small>
+                        </td>
+
+                        <td>
+                            <strong>{{ row.subject_name }}</strong>
+                        </td>
+
+                        <td>
+                            Semester {{ row.semester_no }}
+                            -
+                            {{ row.section_name }}
+                        </td>
+
+                        <td>
+
+                            {% if row.topics %}
+
+                                {% for topic in row.topics %}
+                                    <span class="topic-badge">
+                                        {{ topic }}
+                                    </span>
+                                {% endfor %}
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    No Topics
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            <span class="badge bg-success">
+                                {{ row.present_count }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge bg-danger">
+                                {{ row.absent_count }}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            {% if row.attendance_percentage >= 75 %}
+
+                                <span class="attendance-good">
+                                    {{ row.attendance_percentage }}%
+                                </span>
+
+                            {% else %}
+
+                                <span class="attendance-low">
+                                    {{ row.attendance_percentage }}%
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#recordModal{{ row.id }}">
+                                View Details
+                            </button>
+                        </td>
+
+                    </tr>
+                    
+                    <div class="modal fade" id="recordModal{{ row.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                            
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">
+                                        📘 {{ row.subject_name }} - Attendance Details
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                            
+                                <div class="modal-body">
+                                
+                                    <h6 class="fw-bold">📝 Topics Covered</h6>
+                                    {% if row.topics %}
+                                        <ul>
+                                            {% for topic in row.topics %}
+                                                <li>{{ topic }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No topics added.</p>
+                                    {% endif %}
+                                    
+                                    <hr>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded text-center">
+                                                <h4 class="text-primary fw-bold">{{ row.total_students }}</h4>
+                                                <small>Total Students</small>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded text-center">
+                                                <h4 class="text-success fw-bold">{{ row.present_count }}</h4>
+                                                <small>Present</small>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded text-center">
+                                                <h4 class="text-danger fw-bold">{{ row.absent_count }}</h4>
+                                                <small>Absent</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                    <hr>
+                                
+                                    <div class="row">
+                                    
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-success">✅ Present Students</h6>
+                                        
+                                            {% if row.present_students %}
+                                                <ul class="list-group">
+                                                    {% for s in row.present_students %}
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>{{ s.name }}</span>
+                                                            <span class="badge bg-success">{{ s.roll_no }}</span>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-muted">No present students.</p>
+                                            {% endif %}
+                                        </div>
+                                    
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-danger">❌ Absent Students</h6>
+                                        
+                                            {% if row.absent_students %}
+                                                <ul class="list-group">
+                                                    {% for s in row.absent_students %}
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>{{ s.name }}</span>
+                                                            <span class="badge bg-danger">{{ s.roll_no }}</span>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-muted">No absent students.</p>
+                                            {% endif %}
+                                        </div>
+                                    
+                                    </div>
+                                
+                                </div>
+                            
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+
+</body>
+</html>

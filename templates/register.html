@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Student | SZIC Attendance</title>
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f0f2f5;
+        }
+
+        .sidebar{
+            background:#10182f;
+            min-height:100vh;
+            padding:22px;
+            width:250px;
+            position:fixed;
+            top:0;
+            left:0;
+        }
+        
+        .sidebar a{
+            color:#c8d0df;
+            text-decoration:none;
+            display:block;
+            padding:12px 15px;
+            border-radius:10px;
+            margin-bottom:7px;
+            transition:.2s;
+        }
+        
+        .sidebar a:hover,
+        .sidebar .active{
+            background:#0d47a1;
+            color:white;
+        }
+        
+        .main-content{
+            margin-left:250px;
+            padding:32px;
+        }
+
+        .method-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .method-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .method-card.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #f0f2ff;
+        }
+
+        #preview_img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 10px;
+            display: none;
+            margin: 10px auto;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .delete-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .delete-btn:hover {
+            background: #ffe0e0;
+        }
+    </style>
+</head>
+
+<body>
+
+{% include 'sidebar.html' %}
+
+<div class="main-content">
+
+    <h4 class="fw-bold mb-4">Register New Student</h4>
+
+    <div class="row">
+
+        <!-- LEFT: Register Form -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+
+                    {% if message %}
+                    <div class="alert alert-success">✅ {{ message }}</div>
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="alert alert-danger">❌ {{ error }}</div>
+                    {% endif %}
+
+                    <!-- Student Basic Info -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Student Name</label>
+                        <input type="text"
+                               id="student_name"
+                               class="form-control"
+                               placeholder="Enter student name">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Roll Number</label>
+                        <input type="text"
+                               id="student_roll"
+                               class="form-control"
+                               placeholder="Enter roll number">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Gender</label>
+                        <select id="student_gender" class="form-select" onchange="handleGenderChange()">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <!-- Semester -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Semester</label>
+
+                        <select class="form-select" id="semester_select">
+                            {% for sem in semesters %}
+                            <option value="{{ sem.id }}">
+                                Semester {{ sem.semester_no }} ({{ sem.session_name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Section -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Section</label>
+
+                        <select class="form-select" id="section_select">
+                            {% for sec in sections %}
+                            <option value="{{ sec.id }}">
+                                Section {{ sec.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Method Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="method-card selected"
+                                 id="card_camera"
+                                 onclick="selectMethod('camera')">
+                                <div style="font-size:2rem;">📷</div>
+                                <div class="fw-bold mt-2">Camera Capture</div>
+                                <small class="text-muted">Live camera se face capture</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="method-card"
+                                 id="card_upload"
+                                 onclick="selectMethod('upload')">
+                                <div style="font-size:2rem;">🖼️</div>
+                                <div class="fw-bold mt-2">Image Upload</div>
+                                <small class="text-muted">Photo file upload karo</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Camera Section -->
+                    <div id="section_camera">
+                        <form method="POST" action="/register_camera">
+                            <input type="hidden" name="name" id="cam_name">
+                            <input type="hidden" name="roll_no" id="cam_roll">
+                            <input type="hidden" name="gender" id="cam_gender">
+                            <input type="hidden" name="section_id" id="cam_section">
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100 py-2"
+                                    onclick="return fillCameraForm()">
+                                📷 Open Camera & Capture
+                            </button>
+                        </form>
+
+                        <p class="text-muted mt-2" style="font-size:0.85rem;">
+                            ⚠️ Camera khulega — chehra samne rakho,
+                            <strong>30 photos</strong> automatically li jayengi.
+                        </p>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div id="section_upload" style="display:none;">
+                        <form method="POST"
+                              action="/register_upload"
+                              enctype="multipart/form-data">
+
+                            <input type="hidden" name="name" id="up_name">
+                            <input type="hidden" name="roll_no" id="up_roll">
+                            <input type="hidden" name="gender" id="up_gender">
+                            <input type="hidden" name="section_id" id="up_section">
+
+                            <div class="upload-area"
+                                 onclick="document.getElementById('file_input').click()">
+
+                                <img id="preview_img" src="" alt="Preview">
+
+                                <div id="upload_text">
+                                    <div style="font-size:2rem;">📁</div>
+                                    <p class="mb-0 fw-bold">Click karke image select karo</p>
+                                    <small class="text-muted">JPG, PNG supported</small>
+                                </div>
+                            </div>
+
+                            <input type="file"
+                                   id="file_input"
+                                   name="photo"
+                                   accept="image/*"
+                                   style="display:none;"
+                                   onchange="previewImage(this)">
+
+                            <button type="submit"
+                                    class="btn btn-success w-100 py-2 mt-3"
+                                    onclick="return fillUploadForm()">
+                                🖼️ Upload & Register
+                            </button>
+                        </form>
+
+                        <p class="text-muted mt-2" style="font-size:0.85rem;">
+                            ⚠️ Upload clear front face photo.
+                        </p>
+                    </div>
+
+                    <!-- Female Manual Registration Section -->
+                    <div id="section_female_manual" style="display:none;">
+                        <form method="POST" action="/register_manual">
+                            <input type="hidden" name="name" id="manual_name">
+                            <input type="hidden" name="roll_no" id="manual_roll">
+                            <input type="hidden" name="section_id" id="manual_section">
+                            <input type="hidden" name="gender" value="Female">
+                        
+                            <button type="submit"
+                                    class="btn btn-warning w-100 py-2"
+                                    onclick="return fillManualForm()">
+                                Register Female Student Without Photo
+                            </button>
+                        </form>
+                    
+                        <p class="text-muted mt-2" style="font-size:0.85rem;">
+                            Female students ke liye face/photo registration disabled hai.
+                            Attendance manual checklist se mark hogi.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Registered Students List -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">👥 Registered Students</span>
+                    <span class="badge bg-primary rounded-pill">
+                        {{ students|length }}
+                    </span>
+                </div>
+
+                <div class="card-body" style="max-height:500px; overflow-y:auto;">
+                    {% if students %}
+                        {% for s in students %}
+                        <div class="student-item">
+                            <div class="student-avatar">
+                                {{ s.name[0].upper() }}
+                            </div>
+
+                            <div>
+                                <div class="fw-bold" style="font-size:0.95rem;">
+                                    {{ s.name }}
+                                </div>
+
+                                <small class="text-muted">
+                                    Roll: {{ s.roll_no }}
+                                    <br>
+                                    Semester {{ s.semester_no }} - Section {{ s.section_name }}
+                                </small>
+                            </div>
+
+                            <button class="delete-btn"
+                                    onclick="confirmDelete({{ s.id }}, '{{ s.name }}')"
+                                    title="Delete student">
+                                🗑️
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            Koi student registered nahi
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">⚠️ Delete Student</h6>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="delete_msg" class="mb-0"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <a id="delete_link"
+                   href="#"
+                   class="btn btn-danger btn-sm">
+                    Delete
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+    function selectMethod(method) {
+        document.getElementById('card_camera').classList.remove('selected');
+        document.getElementById('card_upload').classList.remove('selected');
+
+        document.getElementById(`card_${method}`).classList.add('selected');
+
+        document.getElementById('section_camera').style.display =
+            method === 'camera' ? 'block' : 'none';
+
+        document.getElementById('section_upload').style.display =
+            method === 'upload' ? 'block' : 'none';
+    }
+
+    function handleGenderChange() {
+        const gender = document.getElementById('student_gender').value;
+    
+        if (gender === 'Female') {
+            document.getElementById('card_camera').style.display = 'none';
+            document.getElementById('card_upload').style.display = 'none';
+            document.getElementById('section_camera').style.display = 'none';
+            document.getElementById('section_upload').style.display = 'none';
+            document.getElementById('section_female_manual').style.display = 'block';
+        } else {
+            document.getElementById('card_camera').style.display = 'block';
+            document.getElementById('card_upload').style.display = 'block';
+            document.getElementById('section_female_manual').style.display = 'none';
+            selectMethod('camera');
+        }
+    }
+
+    function fillCameraForm() {
+        const name = document.getElementById('student_name').value.trim();
+        const roll = document.getElementById('student_roll').value.trim();
+        const section = document.getElementById('section_select').value;
+        const gender = document.getElementById('student_gender').value;
+
+        if (!name || !roll) {
+            alert('Pehle Name aur Roll Number bharo!');
+            return false;
+        }
+
+        document.getElementById('cam_name').value = name;
+        document.getElementById('cam_roll').value = roll;
+        document.getElementById('cam_gender').value = gender;
+        document.getElementById('cam_section').value = section;
+
+        return true;
+    }
+
+    function fillUploadForm() {
+        const name = document.getElementById('student_name').value.trim();
+        const roll = document.getElementById('student_roll').value.trim();
+        const section = document.getElementById('section_select').value;
+        const photo = document.getElementById('file_input').value;
+
+        if (!name || !roll) {
+            alert('Pehle Name aur Roll Number bharo!');
+            return false;
+        }
+
+        if (!photo) {
+            alert('Pehle photo select karo!');
+            return false;
+        }
+
+        document.getElementById('up_name').value = name;
+        document.getElementById('up_roll').value = roll;
+        document.getElementById('up_section').value = section;
+
+        return true;
+    }
+
+
+    function fillManualForm() {
+        const name = document.getElementById('student_name').value.trim();
+        const roll = document.getElementById('student_roll').value.trim();
+        const section = document.getElementById('section_select').value;
+
+        if (!name || !roll) {
+            alert('Pehle Name aur Roll Number bharo!');
+            return false;
+        }
+
+        document.getElementById('manual_name').value = name;
+        document.getElementById('manual_roll').value = roll;
+        document.getElementById('manual_section').value = section;
+
+        return true;
+    }
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const img = document.getElementById('preview_img');
+                img.src = e.target.result;
+                img.style.display = 'block';
+
+                document.getElementById('upload_text').style.display = 'none';
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function confirmDelete(id, name) {
+        document.getElementById('delete_msg').textContent =
+            `"${name}" ko delete karna chahte ho?`;
+
+        document.getElementById('delete_link').href =
+            `/delete_student/${id}`;
+
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+document.getElementById('semester_select').addEventListener('change', function () {
+    const semesterId = this.value;
+    const sectionSelect = document.getElementById('section_select');
+
+    fetch(`/get_sections/${semesterId}`)
+        .then(response => response.json())
+        .then(data => {
+            sectionSelect.innerHTML = '';
+
+            data.sections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = `Section ${section.name}`;
+                sectionSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            alert('Sections load nahi ho sake.');
+            console.error(error);
+        });
+});
+
+</script>
+
+</body>
+</html>
