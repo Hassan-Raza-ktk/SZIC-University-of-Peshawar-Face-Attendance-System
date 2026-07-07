@@ -138,8 +138,8 @@ Store in Database
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Hassan-Raza-ktk/face-recognition-attendance-system.git
-cd face-recognition-attendance-system
+git clone https://github.com/Hassan-Raza-ktk/SZIC-University-of-Peshawar-Face-Attendance-System.git
+cd SZIC-University-of-Peshawar-Face-Attendance-System
 
 # 2. Create virtual environment
 python -m venv venv
